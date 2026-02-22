@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Pokémon Activities English Challenge ⚡</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #FFD700;
+    --darkblue: #1a1a4e;
+    --red: #e63946;
+    --white: #fff;
+    --green: #2ecc71;
+    --orange: #ff6b35;
+    --lightblue: #74c0fc;
+    --purple: #9b59b6;
+    --teal: #00b894;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--darkblue);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; background: white; border-radius: 50%;
+    animation: twinkle var(--d, 3s) infinite ease-in-out;
+  }
+  @keyframes twinkle { 0%,100%{opacity:0.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+
+  body::before {
+    content: '';
+    position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(230,57,70,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(0,184,148,0.08) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255,215,0,0.05) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+    animation: bgPulse 6s ease-in-out infinite;
+  }
+  @keyframes bgPulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+  #app {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  /* Header */
+  .game-header { text-align: center; margin-bottom: 10px; }
+  .game-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(12px, 2.5vw, 20px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--red), 6px 6px 0 rgba(0,0,0,0.4);
+    animation: titleFloat 3s ease-in-out infinite;
+  }
+  @keyframes titleFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  .game-subtitle { font-size: 13px; color: var(--lightblue); margin-top: 6px; font-weight: 700; text-shadow: 0 0 10px rgba(116,192,252,0.6); }
+
+  /* Score bar */
+  .score-bar {
+    display: flex; gap: 16px; align-items: center;
+    background: rgba(255,255,255,0.07);
+    border: 2px solid var(--yellow);
+    border-radius: 15px; padding: 8px 18px;
+    margin-bottom: 15px; backdrop-filter: blur(5px);
+    flex-wrap: wrap; justify-content: center;
+  }
+  .score-item { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--white); }
+  .score-item span { color: var(--yellow); }
+
+  /* Battle arena */
+  .battle-arena {
+    width: 100%; max-width: 900px;
+    background: linear-gradient(180deg, #0a0a2e 0%, #1a1a5e 50%, #0d3b1a 100%);
+    border: 3px solid var(--yellow); border-radius: 20px;
+    padding: 20px; position: relative; overflow: hidden;
+    box-shadow: 0 0 40px rgba(255,215,0,0.3), inset 0 0 60px rgba(0,0,0,0.5);
+    margin-bottom: 15px;
+  }
+  .battle-arena::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+    background: linear-gradient(0deg, #0d3b1a, transparent); pointer-events: none;
+  }
+
+  .track-container {
+    position: relative; height: 100px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+  }
+  .track-line {
+    position: absolute; bottom: 30px; left: 70px; right: 70px;
+    height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;
+  }
+  .track-line-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--yellow));
+    border-radius: 2px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 10px var(--teal); width: 0%;
+  }
+  .track-dots {
+    position: absolute; bottom: 22px; left: 70px; right: 70px;
+    display: flex; justify-content: space-between;
+  }
+  .track-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3); transition: all 0.4s;
+  }
+  .track-dot.done { background: var(--green); border-color: var(--green); box-shadow: 0 0 8px var(--green); }
+  .track-dot.current { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 12px var(--yellow); animation: dotPulse 1s infinite; }
+  @keyframes dotPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+
+  /* Pokeball */
+  .pokeball-container {
+    position: absolute; bottom: 20px; left: 60px;
+    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 5;
+  }
+  .pokeball {
+    width: 60px; height: 60px;
+    animation: ballFloat 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 8px rgba(255,215,0,0.6));
+  }
+  @keyframes ballFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-8px) rotate(10deg)} }
+  .pokeball.throwing { animation: ballThrow 0.6s ease-in forwards; }
+  @keyframes ballThrow {
+    0%{transform:translateY(0) rotate(0deg) scale(1)}
+    30%{transform:translateY(-30px) rotate(180deg) scale(1.2)}
+    60%{transform:translateY(-10px) rotate(360deg) scale(0.9)}
+    100%{transform:translateY(0) rotate(720deg) scale(1)}
+  }
+  .pokeball.wrong-shake { animation: wrongShake 0.5s ease; }
+  @keyframes wrongShake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-15px)}
+    40%{transform:translateX(15px)} 60%{transform:translateX(-10px)} 80%{transform:translateX(10px)}
+  }
+
+  /* Pikachu */
+  .pikachu-container { position: absolute; bottom: 15px; right: 55px; z-index: 5; }
+  .pikachu-emoji {
+    font-size: 56px;
+    filter: drop-shadow(0 0 12px rgba(255,215,0,0.8));
+    animation: pikachuBob 1.5s ease-in-out infinite; display: block;
+  }
+  @keyframes pikachuBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .pikachu-emoji.scared { animation: pikachuScared 0.4s ease-in-out 3; }
+  @keyframes pikachuScared { 0%,100%{transform:translateX(0) scaleX(-1)} 50%{transform:translateX(8px) scaleX(-1)} }
+  .pikachu-emoji.captured { animation: pikachuCaptured 1s forwards; }
+  @keyframes pikachuCaptured {
+    0%{transform:scale(1)} 30%{transform:scale(1.3)}
+    60%{transform:scale(0.5) rotate(20deg)} 100%{transform:scale(0) rotate(360deg);opacity:0}
+  }
+
+  /* ═══════════════════════════════════════
+     WORD + IMAGE CARD — nueva sección
+  ═══════════════════════════════════════ */
+  .word-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,215,0,0.4);
+    border-radius: 20px; padding: 16px 20px;
+    text-align: center; backdrop-filter: blur(5px);
+    max-width: 900px; width: 100%;
+    margin-bottom: 15px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+
+  /* Image illustration box */
+  .word-image-box {
+    width: 140px; height: 140px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+    border: 2px solid rgba(255,215,0,0.25);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    animation: imageAppear 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 0 20px rgba(0,184,148,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+  }
+  @keyframes imageAppear { 0%{transform:scale(0.5) rotate(-5deg);opacity:0} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+
+  .word-image-box::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 70%);
+  }
+
+  .word-emoji-big {
+    font-size: 72px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+    z-index: 1;
+    animation: emojiPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes emojiPop { 0%{transform:scale(0)} 70%{transform:scale(1.1)} 100%{transform:scale(1)} }
+
+  .word-image-label {
+    font-size: 9px;
+    font-family: 'Press Start 2P', monospace;
+    color: rgba(255,255,255,0.4);
+    z-index: 1;
+  }
+
+  /* Text section */
+  .word-text-section { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+  .word-category-badge {
+    font-size: 9px; font-family: 'Press Start 2P', monospace;
+    background: var(--teal); color: white;
+    padding: 3px 10px; border-radius: 20px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.3);
+  }
+
+  .word-display {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(18px, 4.5vw, 38px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--red), 0 0 20px rgba(255,215,0,0.5);
+    letter-spacing: 2px;
+    animation: wordAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes wordAppear { 0%{transform:scale(0) rotate(-10deg);opacity:0} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+
+  .phonetic { font-size: 15px; color: rgba(255,255,255,0.55); font-style: italic; }
+  .translation { font-size: 13px; color: var(--lightblue); font-weight: 700; }
+
+  /* Scene description */
+  .scene-text {
+    font-size: 12px; color: rgba(255,255,255,0.6);
+    font-style: italic; max-width: 400px; line-height: 1.5;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px; padding: 6px 12px;
+    border-left: 3px solid var(--teal);
+  }
+
+  /* Progress text */
+  .progress-text {
+    font-family: 'Press Start 2P', monospace; font-size: 9px;
+    color: rgba(255,255,255,0.5); text-align: center; margin-bottom: 10px;
+  }
+
+  /* Mic section */
+  .mic-section { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 15px; }
+  .mic-instruction {
+    font-size: 11px; color: rgba(255,255,255,0.7);
+    font-family: 'Press Start 2P', monospace; text-align: center; line-height: 1.7;
+  }
+  .mic-btn {
+    width: 90px; height: 90px; border-radius: 50%; border: none;
+    background: radial-gradient(circle, var(--red) 0%, #8b0000 100%);
+    cursor: pointer; font-size: 36px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 0 #4a0000, 0 0 30px rgba(230,57,70,0.5);
+    transition: all 0.1s; position: relative; overflow: hidden;
+  }
+  .mic-btn::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+    border-radius: 50% 50% 0 0;
+  }
+  .mic-btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #4a0000, 0 0 40px rgba(230,57,70,0.7); }
+  .mic-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #4a0000; }
+  .mic-btn.recording {
+    background: radial-gradient(circle, #ff4444 0%, var(--red) 100%);
+    animation: recordPulse 0.8s ease-in-out infinite;
+    box-shadow: 0 6px 0 #4a0000, 0 0 50px rgba(255,68,68,0.8);
+  }
+  @keyframes recordPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+  .mic-btn.processing {
+    background: radial-gradient(circle, var(--yellow) 0%, #aa8800 100%);
+    box-shadow: 0 6px 0 #5a4400, 0 0 30px rgba(255,215,0,0.5);
+  }
+  .recording-status {
+    font-size: 11px; font-family: 'Press Start 2P', monospace;
+    color: var(--yellow); min-height: 16px; text-align: center;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* Feedback */
+  .feedback-panel {
+    max-width: 900px; width: 100%; border-radius: 16px;
+    padding: 15px 20px; display: none; margin-bottom: 15px; border: 2px solid;
+    backdrop-filter: blur(5px);
+    animation: feedbackSlide 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes feedbackSlide { 0%{transform:translateY(20px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+  .feedback-panel.success { background: rgba(46,204,113,0.15); border-color: var(--green); }
+  .feedback-panel.error { background: rgba(230,57,70,0.15); border-color: var(--red); }
+  .feedback-title { font-family: 'Press Start 2P', monospace; font-size: 13px; margin-bottom: 8px; }
+  .feedback-panel.success .feedback-title { color: var(--green); }
+  .feedback-panel.error .feedback-title { color: var(--red); }
+  .feedback-text { font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+  .tip-list { list-style: none; margin-top: 8px; }
+  .tip-list li { padding: 4px 0 4px 22px; position: relative; font-size: 13px; color: rgba(255,255,255,0.8); }
+  .tip-list li::before { content: '💊'; position: absolute; left: 0; }
+  .heard-text { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 12px; margin-top: 8px; font-size: 13px; color: var(--lightblue); }
+
+  /* Buttons */
+  .btn-group { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px; }
+  .btn { font-family: 'Press Start 2P', monospace; font-size: 10px; padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; transition: all 0.1s; text-transform: uppercase; }
+  .btn-primary { background: var(--yellow); color: var(--darkblue); box-shadow: 0 5px 0 #8a6f00; }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-primary:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a6f00; }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 0 rgba(0,0,0,0.3); }
+
+  /* Particles */
+  #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+  .particle { position: absolute; border-radius: 50%; animation: particleFall var(--dur, 1s) ease-in forwards; }
+  @keyframes particleFall { 0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1} 100%{transform:translateY(300px) rotate(720deg) scale(0);opacity:0} }
+
+  /* Lightning */
+  .lightning { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 200; opacity: 0; background: rgba(255,255,150,0.15); }
+  .lightning.flash { animation: lightningFlash 0.5s; }
+  @keyframes lightningFlash { 0%{opacity:0} 10%{opacity:1} 20%{opacity:0} 30%{opacity:0.5} 40%{opacity:0} 100%{opacity:0} }
+
+  /* Audio prompt */
+  .audio-prompt {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 1000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+  }
+  .audio-prompt-box {
+    background: linear-gradient(135deg, #1a1a4e, #0a2a1a);
+    border: 3px solid var(--teal); border-radius: 24px;
+    padding: 40px 30px; max-width: 460px; width: 100%;
+    text-align: center; box-shadow: 0 0 60px rgba(0,184,148,0.4);
+    animation: winPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .audio-prompt-emoji { font-size: 72px; margin-bottom: 15px; }
+  .audio-prompt-title {
+    font-family: 'Press Start 2P', monospace; font-size: 13px;
+    color: var(--teal); text-shadow: 2px 2px 0 #005a47; margin-bottom: 12px; line-height: 1.6;
+  }
+  .audio-prompt-text { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.7; }
+
+  /* Win screen */
+  #winScreen {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.92); z-index: 500;
+    flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+  }
+  .win-content {
+    background: linear-gradient(135deg, #1a1a4e, #0a2a1a);
+    border: 3px solid var(--yellow); border-radius: 24px;
+    padding: 30px; max-width: 520px; width: 100%; text-align: center;
+    box-shadow: 0 0 60px rgba(255,215,0,0.5);
+    animation: winPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    max-height: 90vh; overflow-y: auto;
+  }
+  @keyframes winPop { 0%{transform:scale(0) rotate(-10deg);opacity:0} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+  .win-emoji { font-size: 80px; margin-bottom: 10px; animation: winBounce 0.8s infinite; }
+  @keyframes winBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+  .win-title { font-family: 'Press Start 2P', monospace; font-size: 16px; color: var(--yellow); text-shadow: 3px 3px 0 var(--red); margin-bottom: 10px; line-height: 1.5; }
+  .win-subtitle { font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px; }
+  .report-form { display: flex; flex-direction: column; gap: 12px; }
+  .report-input {
+    background: rgba(255,255,255,0.1); border: 2px solid var(--yellow);
+    border-radius: 10px; padding: 12px 16px; color: white;
+    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+    outline: none; text-align: center;
+  }
+  .report-input:focus { border-color: var(--teal); box-shadow: 0 0 15px rgba(0,184,148,0.4); }
+  .report-card { display: none; background: rgba(255,255,255,0.05); border: 2px solid var(--green); border-radius: 12px; padding: 16px; text-align: left; }
+  .report-card.show { display: block; }
+  .report-title { font-family: 'Press Start 2P', monospace; font-size: 9px; color: var(--green); margin-bottom: 12px; text-align: center; }
+  .report-row { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.8); padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .report-row:last-child { border: none; }
+  .report-row .label { color: var(--yellow); font-weight: 700; }
+
+  .confetti-pika { position: fixed; font-size: 24px; animation: confettiPika var(--d,2s) ease-out forwards; pointer-events: none; z-index: 501; }
+  @keyframes confettiPika { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(-200px) rotate(360deg);opacity:0} }
+
+  @media(max-width:600px){
+    .battle-arena{padding:15px 10px;}
+    .word-image-box{width:110px;height:110px;}
+    .word-emoji-big{font-size:54px;}
+    .pokeball{width:45px;height:45px;}
+    .pikachu-emoji{font-size:42px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="lightning" id="lightning"></div>
+<div id="particles"></div>
+
+<!-- Audio permission screen -->
+<div class="audio-prompt" id="audioPrompt">
+  <div class="audio-prompt-box">
+    <div class="audio-prompt-emoji">🎉⚡</div>
+    <div class="audio-prompt-title">LAST WEEKEND<br>ACTIVITIES!</div>
+    <div class="audio-prompt-text">
+      ¡Practica frases de <strong style="color:var(--teal)">Last Weekend Activities</strong> en inglés!<br><br>
+      📢 Activa tu <strong>audio</strong><br>
+      🎙️ Permite el acceso al <strong>micrófono</strong><br>
+      👀 Observa la imagen, lee la palabra<br>
+      🗣️ ¡Pronuncia y atrapa a Pikachu!<br><br>
+      <em style="color:rgba(255,255,255,0.5);font-size:12px">Usa Google Chrome para mejores resultados</em>
+    </div>
+    <button class="btn btn-primary" id="startBtn" style="font-size:11px;padding:16px 30px;">
+      ⚡ ¡VAMOS! ⚡
+    </button>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div id="winScreen">
+  <div class="win-content">
+    <div class="win-emoji">🏆</div>
+    <div class="win-title">¡PIKACHU<br>ATRAPADO!</div>
+    <div class="win-subtitle">¡Excelente pronunciación! ¡Ya dominas el vocabulario de Last Weekend! 🎉⚡</div>
+    <div class="report-form" id="reportForm">
+      <div style="font-family:'Press Start 2P',monospace;font-size:9px;color:var(--yellow);line-height:1.7;">
+        ESCRIBE TU NOMBRE PARA TU CERTIFICADO:
+      </div>
+      <input type="text" class="report-input" id="studentName" placeholder="Tu nombre aquí..." maxlength="40"/>
+      <button class="btn btn-primary" id="generateReportBtn" style="font-size:10px;padding:14px;">
+        📋 ¡MI REPORTE!
+      </button>
+    </div>
+    <div class="report-card" id="reportCard">
+      <div class="report-title">⭐ TRAINER ACTIVITIES REPORT ⭐</div>
+      <div id="reportContent"></div>
+      <button class="btn btn-secondary" onclick="restartGame()" style="width:100%;margin-top:12px;font-size:9px;padding:12px;">
+        🔄 JUGAR DE NUEVO
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="game-header">
+    <div class="game-title">⚡ LAST WEEKEND ⚡</div>
+    <div class="game-subtitle">🏥 Speak to heal & catch Pikachu! 💊</div>
+  </div>
+
+  <div class="score-bar">
+    <div class="score-item">WORD: <span id="wordNum">1</span>/13</div>
+    <div class="score-item">✅ <span id="correctCount">0</span></div>
+    <div class="score-item">❌ <span id="wrongCount">0</span></div>
+    <div class="score-item">🔥 <span id="streak">0</span> STREAK</div>
+  </div>
+
+  <!-- Battle Arena -->
+  <div class="battle-arena">
+    <div class="track-container">
+      <div class="track-line"><div class="track-line-fill" id="trackFill"></div></div>
+      <div class="track-dots" id="trackDots"></div>
+      <div class="pokeball-container" id="pokeballContainer">
+        <div class="pokeball" id="pokeball">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="48" fill="#f0f0f0" stroke="#222" stroke-width="4"/>
+            <path d="M2 50 Q2 2 50 2 Q98 2 98 50 Z" fill="#e63946"/>
+            <line x1="2" y1="50" x2="98" y2="50" stroke="#222" stroke-width="5"/>
+            <circle cx="50" cy="50" r="14" fill="white" stroke="#222" stroke-width="4"/>
+            <circle cx="50" cy="50" r="7" fill="#ddd" stroke="#222" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="pikachu-container">
+        <span class="pikachu-emoji" id="pikachuEmoji">⚡😸⚡</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Word + Image Card -->
+  <div class="word-card">
+    <!-- Imagen ilustrativa -->
+    <div class="word-image-box" id="wordImageBox">
+      <div class="word-emoji-big" id="wordEmoji">🍬</div>
+      <div class="word-image-label">LOOK & LEARN</div>
+    </div>
+    <!-- Texto -->
+    <div class="word-text-section">
+      <div class="word-category-badge" id="categoryBadge">🍬 FUN ACTIVITIES</div>
+      <div class="word-display" id="wordDisplay">BUY CANDY</div>
+      <div class="phonetic" id="phoneticDisplay">/ baɪ ˈkæn.di /</div>
+      <div class="translation" id="translationDisplay">🇲🇽 Comprar dulces</div>
+    </div>
+    <!-- Descripción de escena -->
+    <div class="scene-text" id="sceneText">I want to buy candy at the store!</div>
+  </div>
+
+  <div class="progress-text" id="progressText">Word 1 of 17 — ¡Presiona el micrófono y pronuncia!</div>
+
+  <!-- Mic -->
+  <div class="mic-section">
+    <div class="mic-instruction" id="micInstruction">PRESIONA UNA VEZ 🎙️<br>Y DI LA PALABRA EN VOZ ALTA</div>
+    <button class="mic-btn" id="micBtn" onclick="toggleRecording()">🎙️</button>
+    <div class="recording-status" id="recordingStatus"></div>
+  </div>
+
+  <!-- Feedback -->
+  <div class="feedback-panel" id="feedbackPanel">
+    <div class="feedback-title" id="feedbackTitle"></div>
+    <div class="feedback-text" id="feedbackText"></div>
+    <div class="heard-text" id="heardText" style="display:none"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-group" id="btnGroup" style="display:none">
+    <button class="btn btn-primary" id="nextBtn" onclick="nextWord()">SIGUIENTE ➡️</button>
+    <button class="btn btn-secondary" onclick="retryWord()">🔄 INTENTAR</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  WORD DATA — Last Weekend Activities (13 phrases)
+// ═══════════════════════════════════════════════
+const words = [
+  {
+    word: 'BUY CANDY',
+    phonetic: '/ baɪ ˈkæn.di /',
+    translation: '🇲🇽 Comprar dulces',
+    category: '🍬 FUN ACTIVITIES',
+    emoji: '🍬',
+    scene: "I love going to the store to buy candy with my friends!",
+    tips: [
+      'Say "BYE KAN-dee" — dos palabras claras',
+      'BUY: suena igual que "bye" — como decir adiós',
+      'CANDY: KAN-dee — la A es corta como en "cat"',
+      'Acento en KAN: BYE KAN-dee'
+    ]
+  },
+  {
+    word: 'SEE A MOVIE',
+    phonetic: '/ siː ə ˈmuː.vi /',
+    translation: '🇲🇽 Ver una película',
+    category: '🎬 FUN ACTIVITIES',
+    emoji: '🎬',
+    scene: "On weekends I love to see a movie at the cinema!",
+    tips: [
+      'Say "SEE uh MOO-vee" — tres palabras',
+      'SEE: EE larga como en "tree" → SEE',
+      'MOVIE: MOO-vee — OO larga como en "food"',
+      'No digas "moh-vie" — es MOO-vee'
+    ]
+  },
+  {
+    word: 'TAKE A PICTURE',
+    phonetic: '/ teɪk ə ˈpɪk.tʃər /',
+    translation: '🇲🇽 Tomar una foto',
+    category: '📸 FUN ACTIVITIES',
+    emoji: '📸',
+    scene: "Smile! Let me take a picture of you!",
+    tips: [
+      'Say "TAYK uh PIK-cher" — tres partes',
+      'TAKE: la A suena "AY" como en "cake" → TAYK',
+      'PICTURE: PIK-cher — la TURE suena "cher"',
+      'Practica: TAYK uh PIK-cher'
+    ]
+  },
+  {
+    word: 'GO SHOPPING',
+    phonetic: '/ ɡoʊ ˈʃɒp.ɪŋ /',
+    translation: '🇲🇽 Ir de compras',
+    category: '🛍️ FUN ACTIVITIES',
+    emoji: '🛍️',
+    scene: "I want to go shopping at the mall this Saturday!",
+    tips: [
+      'Say "GOH SHOP-ing" — tres sílabas en total',
+      'GO: O larga como en "no" → GOH',
+      'SHOPPING: SHOP-ing — la SH como en "shh"',
+      'La doble PP hace la O corta: SHOP no SHOPE'
+    ]
+  },
+  {
+    word: 'HAVE A MILKSHAKE',
+    phonetic: '/ hæv ə ˈmɪlk.ʃeɪk /',
+    translation: '🇲🇽 Tomar un malteada',
+    category: '🥤 FUN ACTIVITIES',
+    emoji: '🥤',
+    scene: "After school, let's have a milkshake together!",
+    tips: [
+      'Say "HAV uh MILK-shayk" — cuatro sílabas',
+      'HAVE: la A es corta → HAV (rima con "that")',
+      'MILKSHAKE: MILK + SHAYK — dos partes',
+      'SHAKE: la A suena "AY" → SHAYK'
+    ]
+  },
+  {
+    word: 'EAT PIZZA',
+    phonetic: '/ iːt ˈpiːt.sə /',
+    translation: '🇲🇽 Comer pizza',
+    category: '🍕 FUN ACTIVITIES',
+    emoji: '🍕',
+    scene: "My favorite thing to do is eat pizza on Fridays!",
+    tips: [
+      'Say "EET PEET-suh" — tres sílabas',
+      'EAT: EA = EE larga → EET',
+      'PIZZA: se dice "PEET-suh" — la ZZ suena "ts"',
+      'No digas "pi-za" — es PEET-suh en inglés'
+    ]
+  },
+  {
+    word: 'READ A BOOK',
+    phonetic: '/ riːd ə bʊk /',
+    translation: '🇲🇽 Leer un libro',
+    category: '📚 FUN ACTIVITIES',
+    emoji: '📚',
+    scene: "Every night I read a book before going to sleep.",
+    tips: [
+      'Say "REED uh BUK" — tres palabras',
+      'READ: EA = EE larga → REED (rima con "feed")',
+      'BOOK: la OO es CORTA como en "foot" → BUK',
+      'No confundas: BOOK (corta) ≠ FOOD (larga)'
+    ]
+  },
+  {
+    word: 'WRITE A POEM',
+    phonetic: '/ raɪt ə ˈpoʊ.əm /',
+    translation: '🇲🇽 Escribir un poema',
+    category: '✏️ FUN ACTIVITIES',
+    emoji: '✍️',
+    scene: "In class today we write a poem about nature.",
+    tips: [
+      'Say "RYTE uh POH-em" — cuatro sílabas',
+      'WRITE: la W es silenciosa → RYTE',
+      'POEM: POH-em — dos sílabas, la O es larga',
+      'No olvides: WRITE empieza con sonido R, no W'
+    ]
+  },
+  {
+    word: 'DO KARATE',
+    phonetic: '/ duː kəˈrɑː.ti /',
+    translation: '🇲🇽 Hacer karate',
+    category: '🥋 FUN ACTIVITIES',
+    emoji: '🥋',
+    scene: "Every Tuesday I do karate with my sensei.",
+    tips: [
+      'Say "DOO kuh-RAH-tee" — cuatro sílabas',
+      'DO: OO larga → DOO (rima con "too" y "blue")',
+      'KARATE: kuh-RAH-tee — acento en la segunda sílaba',
+      'Termina en "tee" — no en "tay" como en español'
+    ]
+  },
+  {
+    word: 'SING A SONG',
+    phonetic: '/ sɪŋ ə sɒŋ /',
+    translation: '🇲🇽 Cantar una canción',
+    category: '🎵 FUN ACTIVITIES',
+    emoji: '🎵',
+    scene: "I love to sing a song when I feel happy!",
+    tips: [
+      'Say "SING uh SONG" — tres palabras',
+      'SING: termina con NG nasal → SING (como "ring")',
+      'SONG: la O es corta como en "on" → SONG',
+      'Ambas riman: SING y SONG tienen NG al final'
+    ]
+  },
+  {
+    word: 'MAKE A VIDEO',
+    phonetic: '/ meɪk ə ˈvɪd.i.oʊ /',
+    translation: '🇲🇽 Hacer un video',
+    category: '🎥 FUN ACTIVITIES',
+    emoji: '🎥',
+    scene: "My friends and I make a video for our school project.",
+    tips: [
+      'Say "MAYK uh VID-ee-oh" — cinco sílabas',
+      'MAKE: la A = "AY" → MAYK (rima con "cake")',
+      'VIDEO: VID-ee-oh — tres sílabas, acento en VID',
+      'La O al final es larga: VID-ee-OH'
+    ]
+  },
+  {
+    word: 'BUILD A TREEHOUSE',
+    phonetic: '/ bɪld ə ˈtriː.haʊs /',
+    translation: '🇲🇽 Construir una casa en árbol',
+    category: '🌳 FUN ACTIVITIES',
+    emoji: '🌳',
+    scene: "My dream is to build a treehouse in the backyard!",
+    tips: [
+      'Say "BILD uh TREE-hows" — cuatro sílabas',
+      'BUILD: la U es silenciosa → BILD (rima con "filled")',
+      'TREE: TREE con EE larga',
+      'HOUSE: HOWS — OUS suena "ows" como en "cow"'
+    ]
+  },
+  {
+    word: 'DRAW A PICTURE',
+    phonetic: '/ drɔː ə ˈpɪk.tʃər /',
+    translation: '🇲🇽 Dibujar / Hacer un dibujo',
+    category: '🎨 FUN ACTIVITIES',
+    emoji: '🎨',
+    scene: "I can draw a picture of my family. I love art!",
+    tips: [
+      'Say "DRAW uh PIK-cher" — cuatro sílabas',
+      'DRAW: la AW suena como "aw" → DRAW (rima con "saw")',
+      'PICTURE: PIK-cher — la TURE siempre suena "cher"',
+      'Practica: DRAW uh PIK-cher juntas'
+    ]
+  }
+];
+;
+
+// Variantes aceptables para el reconocimiento de voz
+const acceptableVariants = {
+  'BUY CANDY':       ['buy candy','by candy','bye candy','candy','buy candies'],
+  'SEE A MOVIE':     ['see a movie','see movie','see the movie','movie','see a moovie'],
+  'TAKE A PICTURE':  ['take a picture','take picture','take a photo','picture','take a pitcher'],
+  'GO SHOPPING':     ['go shopping','go shoping','shopping','go shop'],
+  'HAVE A MILKSHAKE':['have a milkshake','have milkshake','milkshake','have a milk shake'],
+  'EAT PIZZA':       ['eat pizza','eat piza','pizza','eat the pizza'],
+  'READ A BOOK':      ['read a book','read book','read the book','book','reed a book'],
+  'WRITE A POEM':    ['write a poem','write poem','right a poem','poem','write a poam'],
+  'DO KARATE':       ['do karate','do karatee','karate','do karati'],
+  'SING A SONG':     ['sing a song','sing song','sing the song','song','sing'],
+  'MAKE A VIDEO':    ['make a video','make video','video','make a vedio'],
+  'BUILD A TREEHOUSE':['build a treehouse','build a tree house','treehouse','tree house','build treehouse'],
+  'DRAW A PICTURE':  ['draw a picture','draw picture','draw a pitcher','picture','draw']
+};
+
+// ═══════════════════════════════════════════════
+//  AUDIO ENGINE
+// ═══════════════════════════════════════════════
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, dur, type='sine', vol=0.3) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+function playSoundAdvance() { [523,659,784,1047].forEach((f,i) => setTimeout(()=>playTone(f,0.2,'square',0.2),i*80)); }
+function playSoundWrong()   { playTone(200,0.4,'sawtooth',0.2); setTimeout(()=>playTone(150,0.5,'sawtooth',0.15),200); }
+function playSoundCapture() {
+  [523,523,523,415,523,659,784].forEach((f,i) => setTimeout(()=>playTone(f,0.25,'square',0.25),i*120));
+  setTimeout(()=>{ [784,784,784,659,784].forEach((f,ii) => setTimeout(()=>playTone(f,0.3,'sine',0.2),ii*100)); }, 900);
+}
+function playSoundRecord() { playTone(800,0.1,'sine',0.15); }
+
+// ═══════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════
+let currentIndex = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let streak = 0;
+let wordAttempts = {};
+let recognition = null;
+let isRecording = false;
+let gameStarted = false;
+let manualStop = false;
+let resultsLog = [];
+
+// ═══════════════════════════════════════════════
+//  STARS
+// ═══════════════════════════════════════════════
+function createStars() {
+  const cont = document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    const sz = Math.random()*3+1;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;
+    cont.appendChild(s);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  TRACK
+// ═══════════════════════════════════════════════
+function buildTrackDots() {
+  const cont = document.getElementById('trackDots');
+  cont.innerHTML = '';
+  for(let i=0;i<words.length;i++){
+    const d = document.createElement('div');
+    d.className = 'track-dot' + (i===0?' current':'');
+    d.id = 'dot'+i;
+    cont.appendChild(d);
+  }
+}
+function updateTrack() {
+  const total = words.length;
+  const pct = (currentIndex / total) * 100;
+  document.getElementById('trackFill').style.width = pct+'%';
+  const arena = document.querySelector('.battle-arena');
+  const arenaW = arena.offsetWidth;
+  const minX = 20, maxX = arenaW - 90;
+  document.getElementById('pokeballContainer').style.left = (minX + (pct/100)*(maxX-minX))+'px';
+  for(let i=0;i<total;i++){
+    const d = document.getElementById('dot'+i);
+    if(!d) continue;
+    d.className = 'track-dot'+(i<currentIndex?' done':(i===currentIndex?' current':''));
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  PARTICLES / FX
+// ═══════════════════════════════════════════════
+function spawnParticles(type) {
+  const cont = document.getElementById('particles');
+  const colors = type==='win'?['#FFD700','#ff6b35','#2ecc71','#74c0fc','#e63946']
+               : type==='success'?['#2ecc71','#FFD700','#00b894']
+               : ['#e63946','#ff8888','#ffaaaa'];
+  for(let i=0;i<(type==='win'?60:20);i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const sz = 6+Math.random()*10;
+    p.style.cssText = `width:${sz}px;height:${sz}px;left:${10+Math.random()*80}%;top:${60+Math.random()*30}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${0.8+Math.random()*1.5}s;animation-delay:${Math.random()*0.5}s`;
+    cont.appendChild(p);
+    setTimeout(()=>p.remove(),2500);
+  }
+}
+function lightning() {
+  const l = document.getElementById('lightning');
+  l.classList.add('flash');
+  setTimeout(()=>l.classList.remove('flash'),500);
+}
+
+// ═══════════════════════════════════════════════
+//  SPEECH RECOGNITION  (toggle — sin mantener)
+// ═══════════════════════════════════════════════
+function setupRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('micInstruction').textContent = '⚠️ Usa Google Chrome para activar el micrófono';
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.continuous = true;
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 5;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('recordingStatus').textContent = '🔴 GRABANDO... ¡HABLA AHORA!';
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micBtn').textContent = '🛑';
+  };
+
+  recognition.onend = () => {
+    if(isRecording && !manualStop){
+      // El navegador cortó por silencio — reiniciar automático
+      try { recognition.start(); } catch(e){}
+      return;
+    }
+    isRecording = false;
+    manualStop = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    document.getElementById('micBtn').classList.remove('processing');
+    document.getElementById('micBtn').textContent = '🎙️';
+    document.getElementById('recordingStatus').textContent = '';
+  };
+
+  recognition.onerror = (e) => {
+    if(e.error === 'no-speech') return;
+    isRecording = false;
+    manualStop = false;
+    document.getElementById('micBtn').classList.remove('recording');
+    document.getElementById('micBtn').textContent = '🎙️';
+    document.getElementById('recordingStatus').textContent = '';
+    let msg = '⚠️ No te escuché. ¡Intenta de nuevo!';
+    if(e.error==='not-allowed') msg = '⚠️ Micrófono bloqueado. ¡Permite el acceso en Chrome!';
+    showFeedback(false, 'Try Again!', msg, null);
+  };
+
+  recognition.onresult = (e) => {
+    const lastResult = e.results[e.results.length - 1];
+    const results = Array.from(lastResult).map(r=>r.transcript.trim().toLowerCase());
+    document.getElementById('recordingStatus').textContent = '⚙️ Verificando pronunciación...';
+    processResult(results);
+  };
+}
+
+function toggleRecording() {
+  if(!gameStarted) return;
+  const btnGroup = document.getElementById('btnGroup');
+  if(btnGroup.style.display !== 'none') return;
+  if(isRecording){
+    manualStop = true;
+    try { if(recognition) recognition.stop(); } catch(e){}
+  } else {
+    manualStop = false;
+    hideFeedback();
+    playSoundRecord();
+    try { if(recognition) recognition.start(); } catch(e){}
+  }
+}
+
+function stopRecordingAfterResult() {
+  manualStop = true;
+  try { if(recognition) recognition.stop(); } catch(e){}
+}
+
+// ═══════════════════════════════════════════════
+//  PROCESS RESULT
+// ═══════════════════════════════════════════════
+function processResult(results) {
+  const target = words[currentIndex].word.toLowerCase();
+  const variants = (acceptableVariants[words[currentIndex].word]||[]).map(v=>v.toLowerCase());
+
+  let heard = results[0] || '';
+  let correct = false;
+
+  for(const r of results){
+    const clean = r.replace(/[^a-z\s]/g,'').trim();
+    if(clean === target || variants.includes(clean)){ correct=true; heard=r; break; }
+    if(clean.includes(target) || variants.some(v=>clean.includes(v))){ correct=true; heard=r; break; }
+    // Para frases de dos palabras, revisar si contiene palabras clave
+    const targetWords = target.split(' ');
+    if(targetWords.length > 1 && targetWords.every(tw => clean.includes(tw))){ correct=true; heard=r; break; }
+  }
+
+  if(!correct && heard){
+    // Levenshtein para palabras simples
+    const targetClean = target.replace(/\s/g,'');
+    const heardClean = heard.replace(/[^a-z]/g,'');
+    if(levenshtein(heardClean, targetClean) <= 3) correct = true;
+  }
+
+  if(!wordAttempts[currentIndex]) wordAttempts[currentIndex] = {tries:0, passed:false};
+  wordAttempts[currentIndex].tries++;
+
+  if(correct){ handleCorrect(heard); }
+  else { handleWrong(heard); }
+}
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// ═══════════════════════════════════════════════
+//  CORRECT / WRONG
+// ═══════════════════════════════════════════════
+function handleCorrect(heard) {
+  correctCount++; streak++;
+  if(wordAttempts[currentIndex]) wordAttempts[currentIndex].passed = true;
+
+  stopRecordingAfterResult();
+  playSoundAdvance();
+  spawnParticles('success');
+  lightning();
+
+  document.getElementById('pokeball').classList.add('throwing');
+  document.getElementById('pikachuEmoji').classList.add('scared');
+  setTimeout(()=>{
+    document.getElementById('pokeball').classList.remove('throwing');
+    document.getElementById('pikachuEmoji').classList.remove('scared');
+  }, 700);
+
+  updateScores();
+  const msg = streak >= 3 ? `🔥 ¡${streak} SEGUIDAS! ¡INCREÍBLE!` : '⚡ ¡Excelente pronunciación!';
+  showFeedback(true, '✅ ¡CORRECTO!', msg, heard);
+  showNextBtn(true);
+  resultsLog.push({word: words[currentIndex].word, passed:true, tries: wordAttempts[currentIndex]?.tries||1});
+}
+
+function handleWrong(heard) {
+  wrongCount++; streak = 0;
+  playSoundWrong();
+  spawnParticles('fail');
+
+  document.getElementById('pokeball').classList.add('wrong-shake');
+  setTimeout(()=>document.getElementById('pokeball').classList.remove('wrong-shake'),600);
+
+  updateScores();
+  const tips = words[currentIndex].tips;
+  const tipHTML = `<ul class="tip-list">${tips.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+  showFeedback(false, '❌ ¡INTENTA DE NUEVO!', `¡No te rindas! Tips de pronunciación:${tipHTML}`, heard);
+  showNextBtn(false);
+  resultsLog.push({word: words[currentIndex].word, passed:false, heard, tries: wordAttempts[currentIndex]?.tries||1});
+}
+
+function updateScores() {
+  document.getElementById('wordNum').textContent = currentIndex+1;
+  document.getElementById('correctCount').textContent = correctCount;
+  document.getElementById('wrongCount').textContent = wrongCount;
+  document.getElementById('streak').textContent = streak;
+}
+
+// ═══════════════════════════════════════════════
+//  FEEDBACK
+// ═══════════════════════════════════════════════
+function showFeedback(success, title, text, heard) {
+  const p = document.getElementById('feedbackPanel');
+  p.className = 'feedback-panel '+(success?'success':'error');
+  document.getElementById('feedbackTitle').textContent = title;
+  document.getElementById('feedbackText').innerHTML = text;
+  const ht = document.getElementById('heardText');
+  if(heard && !success){ ht.textContent = `🎤 Escuché: "${heard}"`; ht.style.display='block'; }
+  else { ht.style.display='none'; }
+  p.style.display='block';
+}
+function hideFeedback() { document.getElementById('feedbackPanel').style.display='none'; }
+
+function showNextBtn(correct) {
+  const bg = document.getElementById('btnGroup');
+  bg.style.display = 'flex';
+  document.getElementById('nextBtn').style.display = correct ? 'inline-block' : 'none';
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function nextWord() {
+  currentIndex++;
+  document.getElementById('btnGroup').style.display = 'none';
+  hideFeedback();
+  if(currentIndex >= words.length){ setTimeout(winGame, 300); return; }
+  loadWord();
+  updateTrack();
+}
+function retryWord() {
+  document.getElementById('btnGroup').style.display = 'none';
+  hideFeedback();
+}
+function loadWord() {
+  const w = words[currentIndex];
+
+  // Reset emoji animation
+  const emojiEl = document.getElementById('wordEmoji');
+  emojiEl.style.animation = 'none';
+  emojiEl.offsetHeight;
+  emojiEl.style.animation = '';
+  emojiEl.textContent = w.emoji;
+
+  document.getElementById('categoryBadge').textContent = w.category;
+
+  // Reset word animation
+  const wd = document.getElementById('wordDisplay');
+  wd.style.animation = 'none'; wd.offsetHeight; wd.style.animation = '';
+  wd.textContent = w.word;
+
+  document.getElementById('phoneticDisplay').textContent = w.phonetic;
+  document.getElementById('translationDisplay').textContent = w.translation;
+  document.getElementById('sceneText').textContent = w.scene;
+  document.getElementById('wordNum').textContent = currentIndex+1;
+  document.getElementById('progressText').textContent = `Word ${currentIndex+1} of ${words.length} — ¡Observa la imagen y pronuncia!`;
+}
+
+// ═══════════════════════════════════════════════
+//  WIN
+// ═══════════════════════════════════════════════
+function winGame() {
+  playSoundCapture(); lightning(); spawnParticles('win');
+  document.getElementById('pikachuEmoji').classList.add('captured');
+  document.getElementById('pokeball').classList.add('throwing');
+  for(let i=0;i<20;i++){
+    setTimeout(()=>{
+      const p = document.createElement('div');
+      p.className = 'confetti-pika';
+      p.textContent = ['⚡','🌟','🎯','🎬','🎉','🏆','🎨'][Math.floor(Math.random()*7)];
+      p.style.cssText = `left:${Math.random()*90}%;top:${60+Math.random()*30}%;--d:${1.5+Math.random()*1.5}s;animation-delay:${Math.random()*0.5}s`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),3000);
+    }, i*100);
+  }
+  setTimeout(()=>{ document.getElementById('winScreen').style.display='flex'; }, 1200);
+}
+
+function generateReport() {
+  const name = document.getElementById('studentName').value.trim() || 'Student';
+  const total = words.length;
+  const passed = resultsLog.filter(r=>r.passed).length;
+  const pct = Math.round((passed/total)*100);
+  let grade;
+  if(pct>=90) grade='A+ ⭐';
+  else if(pct>=80) grade='B+ 🔥';
+  else if(pct>=70) grade='C+ 👍';
+  else if(pct>=60) grade='D 📚';
+  else grade='F 💪 ¡Sigue practicando!';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-MX');
+  const wrongWords = resultsLog.filter(r=>!r.passed).map(r=>r.word).join(', ') || '¡Ninguna! 🎉';
+
+  document.getElementById('reportContent').innerHTML = `
+    <div class="report-row"><span class="label">👤 Alumno:</span><span>${name}</span></div>
+    <div class="report-row"><span class="label">📅 Fecha:</span><span>${dateStr}</span></div>
+    <div class="report-row"><span class="label">✅ Correctas:</span><span>${passed}/${total}</span></div>
+    <div class="report-row"><span class="label">📊 Score:</span><span>${pct}%</span></div>
+    <div class="report-row"><span class="label">🏅 Calificación:</span><span>${grade}</span></div>
+    <div class="report-row"><span class="label">🔥 Mejor racha:</span><span>${streak}</span></div>
+    <div class="report-row" style="flex-direction:column;gap:4px">
+      <span class="label">⚠️ Practicar más:</span>
+      <span style="font-size:11px;color:rgba(255,200,100,0.9)">${wrongWords}</span>
+    </div>
+    <div class="report-row" style="flex-direction:column;gap:4px;margin-top:4px">
+      <span class="label" style="color:var(--teal)">📝 Palabras del tema:</span>
+      <span style="font-size:10px;color:rgba(255,255,255,0.6)">${words.map(w=>w.word).join(' • ')}</span>
+    </div>
+  `;
+  document.getElementById('reportCard').classList.add('show');
+  document.getElementById('reportForm').style.display = 'none';
+  playSoundCapture();
+  spawnParticles('win');
+}
+
+function restartGame() {
+  currentIndex=0; correctCount=0; wrongCount=0; streak=0;
+  wordAttempts={}; resultsLog=[];
+  document.getElementById('winScreen').style.display='none';
+  document.getElementById('reportCard').classList.remove('show');
+  document.getElementById('reportForm').style.display='flex';
+  document.getElementById('studentName').value='';
+  document.getElementById('btnGroup').style.display='none';
+  hideFeedback();
+  loadWord(); updateTrack(); updateScores();
+  document.getElementById('pikachuEmoji').className='pikachu-emoji';
+  document.getElementById('pokeball').className='pokeball';
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+function startGame() {
+  document.getElementById('audioPrompt').style.display='none';
+  gameStarted = true;
+  try { getAudioCtx().resume(); } catch(e){}
+  setupRecognition();
+  loadWord();
+  buildTrackDots();
+  updateTrack();
+  updateScores();
+}
+
+createStars();
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+</script>
+</body>
+</html>
